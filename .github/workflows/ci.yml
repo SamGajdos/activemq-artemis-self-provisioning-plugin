@@ -26,7 +26,7 @@ concurrency:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       actions: read
       contents: read
@@ -54,7 +54,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v4
@@ -116,20 +116,20 @@ jobs:
             quay.expires-after=90d
             git-sha=$GITHUB_SHA
 
-      - name: Push the dev image to quay.io
-        # Only login if not a PR, as PRs only trigger a Docker build and not a push
-        if: ${{ github.event_name != 'pull_request' }}
-        id: push-to-quay
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-image.outputs.image }}
-          tags: ${{ steps.build-image.outputs.tags }}
-          registry: quay.io/${{ secrets.QUAY_NAMESPACE }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+      # - name: Push the dev image to quay.io
+      #   # Only login if not a PR, as PRs only trigger a Docker build and not a push
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   id: push-to-quay
+      #   uses: redhat-actions/push-to-registry@v2
+      #   with:
+      #     image: ${{ steps.build-image.outputs.image }}
+      #     tags: ${{ steps.build-image.outputs.tags }}
+      #     registry: quay.io/${{ secrets.QUAY_NAMESPACE }}
+      #     username: ${{ secrets.QUAY_USERNAME }}
+      #     password: ${{ secrets.QUAY_PASSWORD }}
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
 
@@ -138,33 +138,33 @@ jobs:
         with:
           ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
 
-      - name: Free up disk space
-        run: |
-          echo "Initial disk space:"
-          df -h
-          # Standard cleanup
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          # Aggressive cleanup
-          sudo rm -rf /opt/hostedtoolcache/Android
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          # Remove other language toolchains
-          sudo rm -rf /usr/lib/jvm
-          sudo rm -rf /opt/hostedtoolcache/Python
-          sudo rm -rf /opt/hostedtoolcache/Go
-          sudo rm -rf /opt/hostedtoolcache/Ruby
-          sudo rm -rf /usr/share/swift
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/share/miniconda
-          # Docker and swap cleanup
-          sudo docker image prune --all --force
-          sudo swapoff -a
-          sudo rm -f /mnt/swapfile
-          sudo apt-get clean
-          echo "Disk space after cleanup:"
-          df -h
+      # - name: Free up disk space .
+      #   run: |
+      #     echo "Initial disk space:"
+      #     df -h
+      #     # Standard cleanup
+      #     sudo rm -rf /usr/share/dotnet
+      #     sudo rm -rf /usr/local/lib/android
+      #     sudo rm -rf /opt/ghc
+      #     # Aggressive cleanup
+      #     sudo rm -rf /opt/hostedtoolcache/Android
+      #     sudo rm -rf "/usr/local/share/boost"
+      #     sudo rm -rf /opt/hostedtoolcache/CodeQL
+      #     # Remove other language toolchains
+      #     sudo rm -rf /usr/lib/jvm
+      #     sudo rm -rf /opt/hostedtoolcache/Python
+      #     sudo rm -rf /opt/hostedtoolcache/Go
+      #     sudo rm -rf /opt/hostedtoolcache/Ruby
+      #     sudo rm -rf /usr/share/swift
+      #     sudo rm -rf /usr/local/share/powershell
+      #     sudo rm -rf /usr/share/miniconda
+      #     # Docker and swap cleanup
+      #     sudo docker image prune --all --force
+      #     sudo swapoff -a
+      #     sudo rm -f /mnt/swapfile
+      #     sudo apt-get clean
+      #     echo "Disk space after cleanup:"
+      #     df -h
 
       - name: Set up CRC
         uses: crc-org/crc-github-action@v1.0.1
